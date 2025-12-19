@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Juego de Palabras con Impostor - Multidispositivo</title>
+    <title>Juego de Palabras con Impostor</title>
     <style>
         * {
             margin: 0;
@@ -20,7 +20,7 @@
         }
         
         .container {
-            max-width: 1200px;
+            max-width: 1000px;
             margin: 0 auto;
             padding: 20px;
         }
@@ -50,13 +50,15 @@
         }
         
         .game-area {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            display: flex;
+            flex-wrap: wrap;
             gap: 30px;
             margin-bottom: 30px;
         }
         
         .panel {
+            flex: 1;
+            min-width: 300px;
             background-color: rgba(255, 255, 255, 0.1);
             border-radius: 15px;
             padding: 25px;
@@ -84,7 +86,7 @@
             font-size: 1.1rem;
         }
         
-        input, select {
+        input {
             width: 100%;
             padding: 15px;
             border-radius: 10px;
@@ -95,7 +97,7 @@
             transition: all 0.3s;
         }
         
-        input:focus, select:focus {
+        input:focus {
             outline: none;
             border-color: #feb47b;
             box-shadow: 0 0 10px rgba(254, 180, 123, 0.5);
@@ -157,11 +159,6 @@
         .participants-list li.regular {
             background-color: rgba(40, 167, 69, 0.2);
             border-left: 5px solid #28a745;
-        }
-        
-        .participants-list li.me {
-            background-color: rgba(0, 123, 255, 0.2);
-            border-left: 5px solid #007bff;
         }
         
         .game-status {
@@ -228,20 +225,6 @@
             letter-spacing: 3px;
         }
         
-        .qr-container {
-            text-align: center;
-            margin: 20px 0;
-        }
-        
-        .qr-code {
-            width: 200px;
-            height: 200px;
-            margin: 0 auto;
-            background-color: white;
-            padding: 10px;
-            border-radius: 10px;
-        }
-        
         .footer {
             text-align: center;
             margin-top: 30px;
@@ -255,12 +238,26 @@
             display: none;
         }
         
-        .success {
-            color: #28a745;
+        .error-message {
+            color: #ff4757;
+            background-color: rgba(220, 53, 69, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border: 1px solid #ff4757;
+            text-align: center;
+            font-weight: bold;
         }
         
-        .error {
-            color: #dc3545;
+        .success-message {
+            color: #28a745;
+            background-color: rgba(40, 167, 69, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border: 1px solid #28a745;
+            text-align: center;
+            font-weight: bold;
         }
         
         .loading {
@@ -285,7 +282,11 @@
         
         @media (max-width: 768px) {
             .game-area {
-                grid-template-columns: 1fr;
+                flex-direction: column;
+            }
+            
+            .panel {
+                min-width: 100%;
             }
             
             h1 {
@@ -293,7 +294,7 @@
             }
         }
     </style>
-    <!-- Incluir Firebase -->
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 </head>
@@ -301,62 +302,33 @@
     <div class="container">
         <header>
             <h1>Juego de Palabras con Impostor</h1>
-            <p class="subtitle">Juega con amigos desde diferentes dispositivos - Sincronización en tiempo real</p>
+            <p class="subtitle">Ingresa tu nombre y código válido para jugar</p>
         </header>
         
         <div class="game-area">
             <div class="panel">
-                <h2>Crear o Unirse a Juego</h2>
+                <h2>Ingresar al Juego</h2>
                 <div class="input-group">
                     <label for="playerName">Tu Nombre:</label>
                     <input type="text" id="playerName" placeholder="Ingresa tu nombre" maxlength="20">
                 </div>
                 
                 <div class="input-group">
-                    <label for="gameAction">Acción:</label>
-                    <select id="gameAction">
-                        <option value="join">Unirse a juego existente</option>
-                        <option value="create">Crear nuevo juego</option>
-                    </select>
+                    <label for="gameCode">Código del Juego:</label>
+                    <input type="text" id="gameCode" placeholder="Ingresa el código (ej: ABC123)" maxlength="6">
                 </div>
                 
-                <div class="input-group" id="joinSection">
-                    <label for="roundCode">Código del Juego:</label>
-                    <input type="text" id="roundCode" placeholder="Ingresa el código de 6 dígitos">
-                </div>
+                <button id="joinButton" onclick="validateAndJoin()">Ingresar al Juego</button>
                 
-                <div class="input-group hidden" id="createSection">
-                    <label for="gameCode">Selecciona un código:</label>
-                    <select id="gameCode">
-                        <option value="">Cargando códigos...</option>
-                    </select>
-                </div>
-                
-                <button id="joinButton" onclick="joinOrCreateGame()">Unirse al Juego</button>
-                
-                <div class="game-status" id="joinStatus">
-                    Ingresa tu nombre y selecciona una acción
-                </div>
-                
-                <div id="gameCreated" class="hidden">
-                    <div class="code-display" id="createdCodeDisplay">
-                        CÓDIGO
-                    </div>
-                    <p>Comparte este código con los demás jugadores</p>
-                    
-                    <div class="qr-container">
-                        <div class="qr-code" id="qrCode">
-                            <!-- QR Code será generado aquí -->
-                        </div>
-                        <p>Escanea para unirse rápidamente</p>
-                    </div>
+                <div id="messageArea">
+                    <!-- Mensajes de error/éxito aparecerán aquí -->
                 </div>
                 
                 <div class="instructions">
                     <h3>Instrucciones:</h3>
                     <ul>
-                        <li><strong>Para crear un juego:</strong> Selecciona "Crear nuevo juego", elige un código y compártelo</li>
-                        <li><strong>Para unirse:</strong> Selecciona "Unirse a juego existente" e ingresa el código compartido</li>
+                        <li>Ingresa tu nombre y un código de 6 letras/números</li>
+                        <li>El código debe existir en la lista de códigos válidos</li>
                         <li>Se requieren mínimo 3 jugadores para comenzar</li>
                         <li>Máximo 10 jugadores por partida</li>
                         <li>Un jugador será aleatoriamente seleccionado como impostor</li>
@@ -367,9 +339,9 @@
             <div class="panel">
                 <h2>Estado del Juego</h2>
                 <div id="gameInfo">
-                    <div class="loading" id="loadingState">
+                    <div class="loading hidden" id="loadingState">
                         <div class="spinner"></div>
-                        <p>Conectando con el servidor...</p>
+                        <p>Conectando...</p>
                     </div>
                     
                     <div id="gameState" class="hidden">
@@ -382,7 +354,7 @@
                         </ul>
                         
                         <button id="startButton" class="hidden" onclick="startGame()">Iniciar Juego</button>
-                        <button id="restartButton" class="hidden" onclick="restartGame()">Finalizar y Reiniciar Juego</button>
+                        <button id="restartButton" class="hidden" onclick="restartGame()">Finalizar Juego</button>
                     </div>
                     
                     <div id="gameContent" class="hidden">
@@ -394,11 +366,11 @@
                             <div class="impostor-message">
                                 ¡ERES EL IMPOSTOR!
                             </div>
-                            <p style="text-align: center;">A los demás jugadores se les mostrará la palabra de arriba. Tu objetivo es no ser descubierto.</p>
+                            <p style="text-align: center;">A los demás jugadores se les mostrará la palabra de arriba.</p>
                         </div>
                         
                         <div id="playerMessage">
-                            <p style="text-align: center; font-size: 1.2rem;">Esta es la palabra secreta. Uno de los jugadores es el impostor y verá un mensaje diferente.</p>
+                            <p style="text-align: center; font-size: 1.2rem;">Esta es la palabra secreta. Uno de los jugadores es el impostor.</p>
                         </div>
                     </div>
                 </div>
@@ -406,14 +378,10 @@
         </div>
         
         <div class="footer">
-            <p>Juego de Palabras con Impostor | Funciona en múltiples dispositivos simultáneamente</p>
-            <p>Los códigos y palabras se cargan desde un archivo TXT en el servidor</p>
+            <p>Juego de Palabras con Impostor | Funciona en múltiples dispositivos</p>
         </div>
     </div>
 
-    <!-- QR Code Library -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
-    
     <script>
         // Configuración de Firebase (usa tu propia configuración)
         const firebaseConfig = {
@@ -451,24 +419,13 @@
                     if (line.trim()) {
                         const [code, word] = line.split(',');
                         if (code && word) {
-                            codeWords[code.trim()] = word.trim();
+                            codeWords[code.trim().toUpperCase()] = word.trim();
                         }
                     }
                 });
                 
                 console.log('Códigos cargados:', Object.keys(codeWords).length);
-                
-                // Actualizar selector de códigos
-                const gameCodeSelect = document.getElementById('gameCode');
-                gameCodeSelect.innerHTML = '<option value="">Selecciona un código</option>';
-                
-                Object.keys(codeWords).forEach(code => {
-                    const option = document.createElement('option');
-                    option.value = code;
-                    option.textContent = `${code} - ${codeWords[code]}`;
-                    gameCodeSelect.appendChild(option);
-                });
-                
+                return true;
             } catch (error) {
                 console.error('Error al cargar códigos:', error);
                 // Códigos de ejemplo si no se puede cargar el archivo
@@ -478,22 +435,9 @@
                     'GHI789': 'COMPUTADORA',
                     'JKL012': 'OCÉANO',
                     'MNO345': 'MONTANA',
-                    'PQR678': 'TELEFONO',
-                    'STU901': 'VENTANA',
-                    'VWX234': 'LIBERTAD',
-                    'YZA567': 'ESCUELA',
-                    'BCD890': 'AMISTAD'
+                    'PQR678': 'TELEFONO'
                 };
-                
-                const gameCodeSelect = document.getElementById('gameCode');
-                gameCodeSelect.innerHTML = '<option value="">Selecciona un código</option>';
-                
-                Object.keys(codeWords).forEach(code => {
-                    const option = document.createElement('option');
-                    option.value = code;
-                    option.textContent = `${code} - ${codeWords[code]}`;
-                    gameCodeSelect.appendChild(option);
-                });
+                return true;
             }
         }
         
@@ -502,45 +446,64 @@
             return 'player_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
         }
         
-        // Generar ID único para el juego
-        function generateGameId() {
-            return 'game_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
-        }
-        
-        // Unirse o crear juego
-        async function joinOrCreateGame() {
-            playerName = document.getElementById('playerName').value.trim();
-            const gameAction = document.getElementById('gameAction').value;
+        // Validar y unirse al juego
+        async function validateAndJoin() {
+            const playerNameInput = document.getElementById('playerName').value.trim();
+            const gameCodeInput = document.getElementById('gameCode').value.trim().toUpperCase();
             
-            if (!playerName) {
-                alert('Por favor ingresa tu nombre');
+            // Validar campos
+            if (!playerNameInput) {
+                showMessage('error', 'Por favor ingresa tu nombre');
                 return;
             }
+            
+            if (!gameCodeInput) {
+                showMessage('error', 'Por favor ingresa un código');
+                return;
+            }
+            
+            // Mostrar estado de carga
+            document.getElementById('loadingState').classList.remove('hidden');
+            
+            // Cargar códigos si no están cargados
+            if (Object.keys(codeWords).length === 0) {
+                await loadCodeWords();
+            }
+            
+            // Validar si el código existe
+            if (!codeWords[gameCodeInput]) {
+                document.getElementById('loadingState').classList.add('hidden');
+                showMessage('error', '❌ Código no válido. El código no existe en la lista.');
+                return;
+            }
+            
+            // Código válido, proceder a unirse
+            playerName = playerNameInput;
+            currentGameCode = gameCodeInput;
             
             // Generar ID único si es la primera vez
             if (!playerId) {
                 playerId = generatePlayerId();
             }
             
-            if (gameAction === 'create') {
+            // Determinar si este es el primer jugador (será el host)
+            const gameSnapshot = await database.ref('games/' + currentGameCode).once('value');
+            const gameData = gameSnapshot.val();
+            
+            if (!gameData) {
+                // Primer jugador - crear juego
+                isHost = true;
                 await createGame();
             } else {
-                await joinGame();
+                // Unirse a juego existente
+                isHost = false;
+                await joinExistingGame(gameData);
             }
         }
         
-        // Crear un nuevo juego
+        // Crear nuevo juego
         async function createGame() {
-            const gameCode = document.getElementById('gameCode').value;
-            
-            if (!gameCode) {
-                alert('Por favor selecciona un código para el juego');
-                return;
-            }
-            
-            currentGameCode = gameCode;
-            currentGameId = generateGameId();
-            isHost = true;
+            currentGameId = currentGameCode;
             
             // Crear juego en Firebase
             await database.ref('games/' + currentGameId).set({
@@ -549,65 +512,45 @@
                 status: 'waiting',
                 participants: {},
                 impostor: null,
-                word: codeWords[currentGameCode] || 'PALABRA_SECRETA',
+                word: codeWords[currentGameCode],
                 createdAt: firebase.database.ServerValue.TIMESTAMP
             });
             
-            // Unirse al juego como host
-            await joinGameAsParticipant();
+            // Unirse como participante
+            await joinAsParticipant();
             
-            // Mostrar código del juego
-            document.getElementById('createdCodeDisplay').textContent = currentGameId.substring(5, 11).toUpperCase();
-            document.getElementById('gameCreated').classList.remove('hidden');
-            
-            // Generar QR Code
-            generateQRCode(currentGameId);
-            
-            document.getElementById('joinStatus').innerHTML = `<span class="success">✓ Juego creado con éxito!</span>`;
+            document.getElementById('loadingState').classList.add('hidden');
+            showMessage('success', '✅ Juego creado. Esperando más jugadores...');
         }
         
         // Unirse a juego existente
-        async function joinGame() {
-            const roundCode = document.getElementById('roundCode').value.trim();
+        async function joinExistingGame(gameData) {
+            currentGameId = currentGameCode;
             
-            if (!roundCode) {
-                alert('Por favor ingresa el código del juego');
-                return;
-            }
-            
-            currentGameId = 'game_' + roundCode.toLowerCase();
-            isHost = false;
-            
-            // Verificar si el juego existe
-            const gameSnapshot = await database.ref('games/' + currentGameId).once('value');
-            
-            if (!gameSnapshot.exists()) {
-                alert('No se encontró un juego con ese código. Verifica el código e intenta nuevamente.');
-                return;
-            }
-            
-            const gameData = gameSnapshot.val();
-            
+            // Verificar estado del juego
             if (gameData.status === 'in_progress') {
-                alert('Este juego ya está en progreso. No puedes unirte ahora.');
+                document.getElementById('loadingState').classList.add('hidden');
+                showMessage('error', 'Este juego ya está en progreso');
                 return;
             }
             
-            // Verificar número máximo de participantes
+            // Verificar número de participantes
             const participantsCount = Object.keys(gameData.participants || {}).length;
             if (participantsCount >= 10) {
-                alert('Este juego ya tiene el máximo de 10 participantes.');
+                document.getElementById('loadingState').classList.add('hidden');
+                showMessage('error', 'Este juego ya tiene 10 participantes (máximo)');
                 return;
             }
             
-            currentGameCode = gameData.code;
-            await joinGameAsParticipant();
+            // Unirse como participante
+            await joinAsParticipant();
             
-            document.getElementById('joinStatus').innerHTML = `<span class="success">✓ Te has unido al juego!</span>`;
+            document.getElementById('loadingState').classList.add('hidden');
+            showMessage('success', '✅ Te has unido al juego');
         }
         
-        // Unirse al juego como participante
-        async function joinGameAsParticipant() {
+        // Unirse como participante
+        async function joinAsParticipant() {
             // Remover listener anterior si existe
             if (playerRef) {
                 playerRef.off();
@@ -628,11 +571,7 @@
             gameRef = database.ref('games/' + currentGameId);
             gameRef.on('value', updateGameState);
             
-            // Escuchar cambios en el propio jugador
-            playerRef = database.ref('games/' + currentGameId + '/participants/' + playerId);
-            
-            // Ocultar sección de unión y mostrar estado del juego
-            document.getElementById('loadingState').classList.add('hidden');
+            // Mostrar estado del juego
             document.getElementById('gameState').classList.remove('hidden');
         }
         
@@ -642,7 +581,7 @@
             
             if (!gameData) {
                 document.getElementById('gameState').classList.add('hidden');
-                document.getElementById('joinStatus').innerHTML = `<span class="error">Este juego ya no existe</span>`;
+                showMessage('error', 'Este juego ya no existe');
                 return;
             }
             
@@ -669,11 +608,11 @@
                 const li = document.createElement('li');
                 
                 if (id === playerId) {
-                    li.className = 'me';
+                    li.classList.add('me');
                 } else if (gameData.status === 'in_progress' && participant.isImpostor) {
-                    li.className = 'impostor';
+                    li.classList.add('impostor');
                 } else {
-                    li.className = 'regular';
+                    li.classList.add('regular');
                 }
                 
                 const nameSpan = document.createElement('span');
@@ -741,7 +680,7 @@
         // Iniciar el juego
         async function startGame() {
             if (!isHost) {
-                alert('Solo el anfitrión puede iniciar el juego');
+                showMessage('error', 'Solo el anfitrión puede iniciar el juego');
                 return;
             }
             
@@ -750,7 +689,7 @@
             const participants = gameSnapshot.val();
             
             if (!participants || Object.keys(participants).length < 3) {
-                alert('Se necesitan al menos 3 participantes para iniciar el juego');
+                showMessage('error', 'Se necesitan al menos 3 participantes para iniciar el juego');
                 return;
             }
             
@@ -769,12 +708,14 @@
             await database.ref('games/' + currentGameId + '/participants/' + impostorId).update({
                 isImpostor: true
             });
+            
+            showMessage('success', '¡Juego iniciado! Un jugador ha sido designado como impostor.');
         }
         
         // Reiniciar el juego
         async function restartGame() {
             if (!isHost) {
-                alert('Solo el anfitrión puede reiniciar el juego');
+                showMessage('error', 'Solo el anfitrión puede reiniciar el juego');
                 return;
             }
             
@@ -796,60 +737,47 @@
                 
                 await database.ref('games/' + currentGameId).update(updates);
             }
+            
+            showMessage('success', 'Juego reiniciado. Pueden comenzar una nueva ronda.');
         }
         
-        // Generar QR Code
-        function generateQRCode(gameId) {
-            const qrContainer = document.getElementById('qrCode');
-            qrContainer.innerHTML = '';
+        // Mostrar mensajes
+        function showMessage(type, text) {
+            const messageArea = document.getElementById('messageArea');
             
-            // Crear URL para unirse directamente
-            const joinUrl = window.location.origin + window.location.pathname + '?game=' + gameId.substring(5, 11).toUpperCase();
+            // Crear elemento de mensaje
+            const messageDiv = document.createElement('div');
+            messageDiv.className = type === 'error' ? 'error-message' : 'success-message';
+            messageDiv.textContent = text;
             
-            // Generar QR
-            const qr = qrcode(0, 'M');
-            qr.addData(joinUrl);
-            qr.make();
+            // Limpiar mensajes anteriores
+            messageArea.innerHTML = '';
+            messageArea.appendChild(messageDiv);
             
-            // Crear imagen del QR
-            const qrImg = qr.createImgTag(5);
-            qrContainer.innerHTML = qrImg;
+            // Auto-eliminar mensajes de éxito después de 5 segundos
+            if (type === 'success') {
+                setTimeout(() => {
+                    messageDiv.remove();
+                }, 5000);
+            }
         }
         
-        // Cambiar entre crear y unirse
-        document.getElementById('gameAction').addEventListener('change', function() {
-            const action = this.value;
-            const joinSection = document.getElementById('joinSection');
-            const createSection = document.getElementById('createSection');
-            
-            if (action === 'create') {
-                joinSection.classList.add('hidden');
-                createSection.classList.remove('hidden');
-            } else {
-                joinSection.classList.remove('hidden');
-                createSection.classList.add('hidden');
+        // Permitir enviar con Enter
+        document.getElementById('gameCode').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                validateAndJoin();
             }
         });
         
         // Inicializar la página
         document.addEventListener('DOMContentLoaded', async function() {
-            // Cargar códigos desde el archivo TXT
+            // Pre-cargar códigos
             await loadCodeWords();
-            
-            // Verificar si hay un código en la URL
-            const urlParams = new URLSearchParams(window.location.search);
-            const gameCodeFromUrl = urlParams.get('game');
-            
-            if (gameCodeFromUrl) {
-                document.getElementById('roundCode').value = gameCodeFromUrl;
-                document.getElementById('gameAction').value = 'join';
-                document.getElementById('joinSection').classList.remove('hidden');
-                document.getElementById('createSection').classList.add('hidden');
-            }
             
             // Generar ID de jugador
             playerId = generatePlayerId();
-            console.log('ID del jugador:', playerId);
+            
+            console.log('Juego listo. Códigos cargados:', Object.keys(codeWords).length);
         });
         
         // Limpiar al salir
