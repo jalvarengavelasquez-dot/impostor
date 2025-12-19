@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego de Palabras con Impostor - Multidispositivo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #2a3c7f, #4a5fcc);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, #ff7e5f, #feb47b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+        
+        .game-area {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .panel {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .panel h2 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: #feb47b;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: 10px;
+        }
+        
+        .input-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            background-color: rgba(0, 0, 0, 0.2);
+            color: white;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #feb47b;
+            box-shadow: 0 0 10px rgba(254, 180, 123, 0.5);
+        }
+        
+        button {
+            background: linear-gradient(to right, #ff7e5f, #feb47b);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            margin-top: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            background: linear-gradient(to right, #6c757d, #8a939b);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .participants-list {
+            list-style-type: none;
+            margin-top: 20px;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+        
+        .participants-list li {
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .participants-list li.impostor {
+            background-color: rgba(220, 53, 69, 0.2);
+            border-left: 5px solid #dc3545;
+        }
+        
+        .participants-list li.regular {
+            background-color: rgba(40, 167, 69, 0.2);
+            border-left: 5px solid #28a745;
+        }
+        
+        .participants-list li.me {
+            background-color: rgba(0, 123, 255, 0.2);
+            border-left: 5px solid #007bff;
+        }
+        
+        .game-status {
+            text-align: center;
+            padding: 20px;
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+        }
+        
+        .game-word {
+            text-align: center;
+            font-size: 2.5rem;
+            margin: 30px 0;
+            padding: 25px;
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            letter-spacing: 3px;
+            font-weight: bold;
+            color: #feb47b;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+        
+        .impostor-message {
+            text-align: center;
+            font-size: 2rem;
+            color: #ff4757;
+            margin: 20px 0;
+            padding: 20px;
+            background-color: rgba(220, 53, 69, 0.1);
+            border-radius: 10px;
+            border: 2px dashed #ff4757;
+        }
+        
+        .instructions {
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+        
+        .instructions h3 {
+            color: #feb47b;
+            margin-bottom: 15px;
+        }
+        
+        .instructions ul {
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 10px;
+        }
+        
+        .code-display {
+            font-size: 1.5rem;
+            text-align: center;
+            padding: 15px;
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            margin: 15px 0;
+            font-weight: bold;
+            letter-spacing: 3px;
+        }
+        
+        .qr-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .qr-code {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 10px;
+            border-radius: 10px;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .success {
+            color: #28a745;
+        }
+        
+        .error {
+            color: #dc3545;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 5px solid #feb47b;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .game-area {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+    <!-- Incluir Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Juego de Palabras con Impostor</h1>
+            <p class="subtitle">Juega con amigos desde diferentes dispositivos - Sincronización en tiempo real</p>
+        </header>
+        
+        <div class="game-area">
+            <div class="panel">
+                <h2>Crear o Unirse a Juego</h2>
+                <div class="input-group">
+                    <label for="playerName">Tu Nombre:</label>
+                    <input type="text" id="playerName" placeholder="Ingresa tu nombre" maxlength="20">
+                </div>
+                
+                <div class="input-group">
+                    <label for="gameAction">Acción:</label>
+                    <select id="gameAction">
+                        <option value="join">Unirse a juego existente</option>
+                        <option value="create">Crear nuevo juego</option>
+                    </select>
+                </div>
+                
+                <div class="input-group" id="joinSection">
+                    <label for="roundCode">Código del Juego:</label>
+                    <input type="text" id="roundCode" placeholder="Ingresa el código de 6 dígitos">
+                </div>
+                
+                <div class="input-group hidden" id="createSection">
+                    <label for="gameCode">Selecciona un código:</label>
+                    <select id="gameCode">
+                        <option value="">Cargando códigos...</option>
+                    </select>
+                </div>
+                
+                <button id="joinButton" onclick="joinOrCreateGame()">Unirse al Juego</button>
+                
+                <div class="game-status" id="joinStatus">
+                    Ingresa tu nombre y selecciona una acción
+                </div>
+                
+                <div id="gameCreated" class="hidden">
+                    <div class="code-display" id="createdCodeDisplay">
+                        CÓDIGO
+                    </div>
+                    <p>Comparte este código con los demás jugadores</p>
+                    
+                    <div class="qr-container">
+                        <div class="qr-code" id="qrCode">
+                            <!-- QR Code será generado aquí -->
+                        </div>
+                        <p>Escanea para unirse rápidamente</p>
+                    </div>
+                </div>
+                
+                <div class="instructions">
+                    <h3>Instrucciones:</h3>
+                    <ul>
+                        <li><strong>Para crear un juego:</strong> Selecciona "Crear nuevo juego", elige un código y compártelo</li>
+                        <li><strong>Para unirse:</strong> Selecciona "Unirse a juego existente" e ingresa el código compartido</li>
+                        <li>Se requieren mínimo 3 jugadores para comenzar</li>
+                        <li>Máximo 10 jugadores por partida</li>
+                        <li>Un jugador será aleatoriamente seleccionado como impostor</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <h2>Estado del Juego</h2>
+                <div id="gameInfo">
+                    <div class="loading" id="loadingState">
+                        <div class="spinner"></div>
+                        <p>Conectando con el servidor...</p>
+                    </div>
+                    
+                    <div id="gameState" class="hidden">
+                        <p id="participantCount">Participantes: 0/10</p>
+                        <p id="roundStatus">Estado: Esperando participantes...</p>
+                        
+                        <h3>Participantes:</h3>
+                        <ul class="participants-list" id="participantsList">
+                            <!-- Los participantes se mostrarán aquí -->
+                        </ul>
+                        
+                        <button id="startButton" class="hidden" onclick="startGame()">Iniciar Juego</button>
+                        <button id="restartButton" class="hidden" onclick="restartGame()">Finalizar y Reiniciar Juego</button>
+                    </div>
+                    
+                    <div id="gameContent" class="hidden">
+                        <div class="game-word" id="gameWord">
+                            PALABRA_SECRETA
+                        </div>
+                        
+                        <div id="impostorMessage" class="hidden">
+                            <div class="impostor-message">
+                                ¡ERES EL IMPOSTOR!
+                            </div>
+                            <p style="text-align: center;">A los demás jugadores se les mostrará la palabra de arriba. Tu objetivo es no ser descubierto.</p>
+                        </div>
+                        
+                        <div id="playerMessage">
+                            <p style="text-align: center; font-size: 1.2rem;">Esta es la palabra secreta. Uno de los jugadores es el impostor y verá un mensaje diferente.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Juego de Palabras con Impostor | Funciona en múltiples dispositivos simultáneamente</p>
+            <p>Los códigos y palabras se cargan desde un archivo TXT en el servidor</p>
+        </div>
+    </div>
+
+    <!-- QR Code Library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+    
+    <script>
+        // Configuración de Firebase (usa tu propia configuración)
+        const firebaseConfig = {
+    apiKey: "AIzaSyAnYLROrYxERL82DeT0ZDLrlxT11xb09AU",
+    authDomain: "impostor-game-addfe.firebaseapp.com",
+    databaseURL: "https://impostor-game-addfe-default-rtdb.firebaseio.com",
+    projectId: "impostor-game-addfe",
+    storageBucket: "impostor-game-addfe.firebasestorage.app",
+    messagingSenderId: "142466170646",
+    appId: "1:142466170646:web:fc335b6e5d6045d6a05a37"
+  };
+
+        
+        const app = initializeApp(firebaseConfig);
+        
+        // Variables globales
+        let playerId = null;
+        let currentGameCode = null;
+        let currentGameId = null;
+        let playerName = "";
+        let isHost = false;
+        let codeWords = {};
+        let playerRef = null;
+        let gameRef = null;
+        
+        // Cargar códigos y palabras desde el archivo TXT
+        async function loadCodeWords() {
+            try {
+                const response = await fetch('codes.txt');
+                const data = await response.text();
+                codeWords = {};
+                
+                const lines = data.split('\n');
+                lines.forEach(line => {
+                    if (line.trim()) {
+                        const [code, word] = line.split(',');
+                        if (code && word) {
+                            codeWords[code.trim()] = word.trim();
+                        }
+                    }
+                });
+                
+                console.log('Códigos cargados:', Object.keys(codeWords).length);
+                
+                // Actualizar selector de códigos
+                const gameCodeSelect = document.getElementById('gameCode');
+                gameCodeSelect.innerHTML = '<option value="">Selecciona un código</option>';
+                
+                Object.keys(codeWords).forEach(code => {
+                    const option = document.createElement('option');
+                    option.value = code;
+                    option.textContent = `${code} - ${codeWords[code]}`;
+                    gameCodeSelect.appendChild(option);
+                });
+                
+            } catch (error) {
+                console.error('Error al cargar códigos:', error);
+                // Códigos de ejemplo si no se puede cargar el archivo
+                codeWords = {
+                    'ABC123': 'MANZANA',
+                    'DEF456': 'ELEFANTE',
+                    'GHI789': 'COMPUTADORA',
+                    'JKL012': 'OCÉANO',
+                    'MNO345': 'MONTANA',
+                    'PQR678': 'TELEFONO',
+                    'STU901': 'VENTANA',
+                    'VWX234': 'LIBERTAD',
+                    'YZA567': 'ESCUELA',
+                    'BCD890': 'AMISTAD'
+                };
+                
+                const gameCodeSelect = document.getElementById('gameCode');
+                gameCodeSelect.innerHTML = '<option value="">Selecciona un código</option>';
+                
+                Object.keys(codeWords).forEach(code => {
+                    const option = document.createElement('option');
+                    option.value = code;
+                    option.textContent = `${code} - ${codeWords[code]}`;
+                    gameCodeSelect.appendChild(option);
+                });
+            }
+        }
+        
+        // Generar ID único para el jugador
+        function generatePlayerId() {
+            return 'player_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+        }
+        
+        // Generar ID único para el juego
+        function generateGameId() {
+            return 'game_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+        }
+        
+        // Unirse o crear juego
+        async function joinOrCreateGame() {
+            playerName = document.getElementById('playerName').value.trim();
+            const gameAction = document.getElementById('gameAction').value;
+            
+            if (!playerName) {
+                alert('Por favor ingresa tu nombre');
+                return;
+            }
+            
+            // Generar ID único si es la primera vez
+            if (!playerId) {
+                playerId = generatePlayerId();
+            }
+            
+            if (gameAction === 'create') {
+                await createGame();
+            } else {
+                await joinGame();
+            }
+        }
+        
+        // Crear un nuevo juego
+        async function createGame() {
+            const gameCode = document.getElementById('gameCode').value;
+            
+            if (!gameCode) {
+                alert('Por favor selecciona un código para el juego');
+                return;
+            }
+            
+            currentGameCode = gameCode;
+            currentGameId = generateGameId();
+            isHost = true;
+            
+            // Crear juego en Firebase
+            await database.ref('games/' + currentGameId).set({
+                code: currentGameCode,
+                hostId: playerId,
+                status: 'waiting',
+                participants: {},
+                impostor: null,
+                word: codeWords[currentGameCode] || 'PALABRA_SECRETA',
+                createdAt: firebase.database.ServerValue.TIMESTAMP
+            });
+            
+            // Unirse al juego como host
+            await joinGameAsParticipant();
+            
+            // Mostrar código del juego
+            document.getElementById('createdCodeDisplay').textContent = currentGameId.substring(5, 11).toUpperCase();
+            document.getElementById('gameCreated').classList.remove('hidden');
+            
+            // Generar QR Code
+            generateQRCode(currentGameId);
+            
+            document.getElementById('joinStatus').innerHTML = `<span class="success">✓ Juego creado con éxito!</span>`;
+        }
+        
+        // Unirse a juego existente
+        async function joinGame() {
+            const roundCode = document.getElementById('roundCode').value.trim();
+            
+            if (!roundCode) {
+                alert('Por favor ingresa el código del juego');
+                return;
+            }
+            
+            currentGameId = 'game_' + roundCode.toLowerCase();
+            isHost = false;
+            
+            // Verificar si el juego existe
+            const gameSnapshot = await database.ref('games/' + currentGameId).once('value');
+            
+            if (!gameSnapshot.exists()) {
+                alert('No se encontró un juego con ese código. Verifica el código e intenta nuevamente.');
+                return;
+            }
+            
+            const gameData = gameSnapshot.val();
+            
+            if (gameData.status === 'in_progress') {
+                alert('Este juego ya está en progreso. No puedes unirte ahora.');
+                return;
+            }
+            
+            // Verificar número máximo de participantes
+            const participantsCount = Object.keys(gameData.participants || {}).length;
+            if (participantsCount >= 10) {
+                alert('Este juego ya tiene el máximo de 10 participantes.');
+                return;
+            }
+            
+            currentGameCode = gameData.code;
+            await joinGameAsParticipant();
+            
+            document.getElementById('joinStatus').innerHTML = `<span class="success">✓ Te has unido al juego!</span>`;
+        }
+        
+        // Unirse al juego como participante
+        async function joinGameAsParticipant() {
+            // Remover listener anterior si existe
+            if (playerRef) {
+                playerRef.off();
+            }
+            
+            if (gameRef) {
+                gameRef.off();
+            }
+            
+            // Agregar participante al juego
+            await database.ref('games/' + currentGameId + '/participants/' + playerId).set({
+                name: playerName,
+                isImpostor: false,
+                joinedAt: firebase.database.ServerValue.TIMESTAMP
+            });
+            
+            // Escuchar cambios en el juego
+            gameRef = database.ref('games/' + currentGameId);
+            gameRef.on('value', updateGameState);
+            
+            // Escuchar cambios en el propio jugador
+            playerRef = database.ref('games/' + currentGameId + '/participants/' + playerId);
+            
+            // Ocultar sección de unión y mostrar estado del juego
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('gameState').classList.remove('hidden');
+        }
+        
+        // Actualizar estado del juego
+        function updateGameState(snapshot) {
+            const gameData = snapshot.val();
+            
+            if (!gameData) {
+                document.getElementById('gameState').classList.add('hidden');
+                document.getElementById('joinStatus').innerHTML = `<span class="error">Este juego ya no existe</span>`;
+                return;
+            }
+            
+            const participants = gameData.participants || {};
+            const participantsCount = Object.keys(participants).length;
+            
+            // Actualizar contador de participantes
+            document.getElementById('participantCount').textContent = `Participantes: ${participantsCount}/10`;
+            
+            // Actualizar estado
+            let statusText = 'Esperando participantes...';
+            if (gameData.status === 'in_progress') {
+                statusText = 'Juego en progreso';
+            } else if (participantsCount >= 3) {
+                statusText = 'Listo para comenzar';
+            }
+            document.getElementById('roundStatus').textContent = `Estado: ${statusText}`;
+            
+            // Actualizar lista de participantes
+            const participantsList = document.getElementById('participantsList');
+            participantsList.innerHTML = '';
+            
+            Object.entries(participants).forEach(([id, participant]) => {
+                const li = document.createElement('li');
+                
+                if (id === playerId) {
+                    li.className = 'me';
+                } else if (gameData.status === 'in_progress' && participant.isImpostor) {
+                    li.className = 'impostor';
+                } else {
+                    li.className = 'regular';
+                }
+                
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = participant.name;
+                
+                const roleSpan = document.createElement('span');
+                if (gameData.status === 'in_progress' && participant.isImpostor) {
+                    roleSpan.textContent = '👑 IMPOSTOR';
+                    roleSpan.style.color = '#ff4757';
+                    roleSpan.style.fontWeight = 'bold';
+                } else if (id === gameData.hostId) {
+                    roleSpan.textContent = 'ANFITRIÓN';
+                } else {
+                    roleSpan.textContent = 'JUGADOR';
+                }
+                
+                li.appendChild(nameSpan);
+                li.appendChild(roleSpan);
+                participantsList.appendChild(li);
+            });
+            
+            // Mostrar/ocultar botón de iniciar
+            const startButton = document.getElementById('startButton');
+            const restartButton = document.getElementById('restartButton');
+            const gameContent = document.getElementById('gameContent');
+            
+            if (isHost && participantsCount >= 3 && gameData.status === 'waiting') {
+                startButton.classList.remove('hidden');
+            } else {
+                startButton.classList.add('hidden');
+            }
+            
+            if (gameData.status === 'in_progress') {
+                // Mostrar contenido del juego
+                gameContent.classList.remove('hidden');
+                document.getElementById('gameWord').textContent = gameData.word;
+                
+                // Verificar si este jugador es el impostor
+                const currentPlayer = participants[playerId];
+                const isImpostor = currentPlayer && currentPlayer.isImpostor;
+                
+                const impostorMessage = document.getElementById('impostorMessage');
+                const playerMessage = document.getElementById('playerMessage');
+                
+                if (isImpostor) {
+                    impostorMessage.classList.remove('hidden');
+                    playerMessage.classList.add('hidden');
+                } else {
+                    impostorMessage.classList.add('hidden');
+                    playerMessage.classList.remove('hidden');
+                }
+                
+                // Mostrar botón de reiniciar solo al anfitrión
+                if (isHost) {
+                    restartButton.classList.remove('hidden');
+                } else {
+                    restartButton.classList.add('hidden');
+                }
+            } else {
+                gameContent.classList.add('hidden');
+                restartButton.classList.add('hidden');
+            }
+        }
+        
+        // Iniciar el juego
+        async function startGame() {
+            if (!isHost) {
+                alert('Solo el anfitrión puede iniciar el juego');
+                return;
+            }
+            
+            // Obtener participantes
+            const gameSnapshot = await database.ref('games/' + currentGameId + '/participants').once('value');
+            const participants = gameSnapshot.val();
+            
+            if (!participants || Object.keys(participants).length < 3) {
+                alert('Se necesitan al menos 3 participantes para iniciar el juego');
+                return;
+            }
+            
+            // Seleccionar aleatoriamente un impostor
+            const participantIds = Object.keys(participants);
+            const impostorId = participantIds[Math.floor(Math.random() * participantIds.length)];
+            
+            // Actualizar estado del juego
+            await database.ref('games/' + currentGameId).update({
+                status: 'in_progress',
+                impostor: impostorId,
+                startedAt: firebase.database.ServerValue.TIMESTAMP
+            });
+            
+            // Marcar al impostor
+            await database.ref('games/' + currentGameId + '/participants/' + impostorId).update({
+                isImpostor: true
+            });
+        }
+        
+        // Reiniciar el juego
+        async function restartGame() {
+            if (!isHost) {
+                alert('Solo el anfitrión puede reiniciar el juego');
+                return;
+            }
+            
+            // Reiniciar estado del juego
+            await database.ref('games/' + currentGameId).update({
+                status: 'waiting',
+                impostor: null
+            });
+            
+            // Reiniciar participantes
+            const gameSnapshot = await database.ref('games/' + currentGameId + '/participants').once('value');
+            const participants = gameSnapshot.val();
+            
+            if (participants) {
+                const updates = {};
+                Object.keys(participants).forEach(id => {
+                    updates['/participants/' + id + '/isImpostor'] = false;
+                });
+                
+                await database.ref('games/' + currentGameId).update(updates);
+            }
+        }
+        
+        // Generar QR Code
+        function generateQRCode(gameId) {
+            const qrContainer = document.getElementById('qrCode');
+            qrContainer.innerHTML = '';
+            
+            // Crear URL para unirse directamente
+            const joinUrl = window.location.origin + window.location.pathname + '?game=' + gameId.substring(5, 11).toUpperCase();
+            
+            // Generar QR
+            const qr = qrcode(0, 'M');
+            qr.addData(joinUrl);
+            qr.make();
+            
+            // Crear imagen del QR
+            const qrImg = qr.createImgTag(5);
+            qrContainer.innerHTML = qrImg;
+        }
+        
+        // Cambiar entre crear y unirse
+        document.getElementById('gameAction').addEventListener('change', function() {
+            const action = this.value;
+            const joinSection = document.getElementById('joinSection');
+            const createSection = document.getElementById('createSection');
+            
+            if (action === 'create') {
+                joinSection.classList.add('hidden');
+                createSection.classList.remove('hidden');
+            } else {
+                joinSection.classList.remove('hidden');
+                createSection.classList.add('hidden');
+            }
+        });
+        
+        // Inicializar la página
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Cargar códigos desde el archivo TXT
+            await loadCodeWords();
+            
+            // Verificar si hay un código en la URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const gameCodeFromUrl = urlParams.get('game');
+            
+            if (gameCodeFromUrl) {
+                document.getElementById('roundCode').value = gameCodeFromUrl;
+                document.getElementById('gameAction').value = 'join';
+                document.getElementById('joinSection').classList.remove('hidden');
+                document.getElementById('createSection').classList.add('hidden');
+            }
+            
+            // Generar ID de jugador
+            playerId = generatePlayerId();
+            console.log('ID del jugador:', playerId);
+        });
+        
+        // Limpiar al salir
+        window.addEventListener('beforeunload', async function() {
+            if (currentGameId && playerId) {
+                // Remover participante del juego
+                await database.ref('games/' + currentGameId + '/participants/' + playerId).remove();
+                
+                // Verificar si el juego quedó vacío
+                const gameSnapshot = await database.ref('games/' + currentGameId + '/participants').once('value');
+                if (!gameSnapshot.exists() || Object.keys(gameSnapshot.val()).length === 0) {
+                    // Eliminar juego si no hay participantes
+                    await database.ref('games/' + currentGameId).remove();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
