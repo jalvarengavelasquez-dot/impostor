@@ -151,19 +151,14 @@
             align-items: center;
         }
         
-        .participants-list li.impostor {
-            background-color: rgba(220, 53, 69, 0.2);
-            border-left: 5px solid #dc3545;
+        .participants-list li.me {
+            background-color: rgba(0, 123, 255, 0.2);
+            border-left: 5px solid #007bff;
         }
         
         .participants-list li.regular {
             background-color: rgba(40, 167, 69, 0.2);
             border-left: 5px solid #28a745;
-        }
-        
-        .participants-list li.me {
-            background-color: rgba(0, 123, 255, 0.2);
-            border-left: 5px solid #007bff;
         }
         
         .game-status {
@@ -309,7 +304,7 @@
                 
                 <div class="input-group">
                     <label for="gameCode">Código del Juego:</label>
-                    <input type="text" id="gameCode" placeholder="Ingresa el código (ej: ABC123)" maxlength="6">
+                    <input type="text" id="gameCode" placeholder="Ingresa el código del archivo codes.txt" maxlength="6">
                 </div>
                 
                 <button id="joinButton" onclick="validateAndJoin()">Ingresar al Juego</button>
@@ -318,14 +313,19 @@
                     <!-- Mensajes de error/éxito aparecerán aquí -->
                 </div>
                 
+                <div class="loading hidden" id="loadingState">
+                    <div class="spinner"></div>
+                    <p>Verificando código...</p>
+                </div>
+                
                 <div class="instructions">
                     <h3>Instrucciones:</h3>
                     <ul>
-                        <li>Ingresa tu nombre y un código de 6 letras/números</li>
-                        <li>El código debe existir en la lista de códigos válidos</li>
+                        <li>Ingresa tu nombre y un código válido del archivo codes.txt</li>
                         <li>Se requieren mínimo 3 jugadores para comenzar</li>
                         <li>Máximo 10 jugadores por partida</li>
                         <li>Un jugador será aleatoriamente seleccionado como impostor</li>
+                        <li><strong>IMPORTANTE:</strong> Solo el impostor sabrá que es el impostor</li>
                     </ul>
                 </div>
             </div>
@@ -333,16 +333,11 @@
             <div class="panel">
                 <h2>Estado del Juego</h2>
                 <div id="gameInfo">
-                    <div class="loading hidden" id="loadingState">
-                        <div class="spinner"></div>
-                        <p>Conectando...</p>
-                    </div>
-                    
                     <div id="gameState" class="hidden">
                         <p id="participantCount">Participantes: 0/10</p>
                         <p id="roundStatus">Estado: Esperando participantes...</p>
                         
-                        <h3>Participantes:</h3>
+                        <h3>Participantes en la sala:</h3>
                         <ul class="participants-list" id="participantsList">
                             <!-- Los participantes se mostrarán aquí -->
                         </ul>
@@ -360,11 +355,17 @@
                             <div class="impostor-message">
                                 ¡ERES EL IMPOSTOR!
                             </div>
-                            <p style="text-align: center;">A los demás jugadores se les mostrará la palabra de arriba.</p>
+                            <p style="text-align: center; margin-top: 20px;">
+                                Los demás jugadores ven la palabra de arriba.<br>
+                                Tu objetivo es no ser descubierto mientras intentas adivinar la palabra real.
+                            </p>
                         </div>
                         
                         <div id="playerMessage">
-                            <p style="text-align: center; font-size: 1.2rem;">Esta es la palabra secreta. Uno de los jugadores es el impostor.</p>
+                            <p style="text-align: center; font-size: 1.2rem;">
+                                Esta es la palabra secreta. Uno de los jugadores es el impostor y está viendo un mensaje diferente.<br>
+                                ¡Descubre quién es el impostor!
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -372,12 +373,12 @@
         </div>
         
         <div class="footer">
-            <p>Juego de Palabras con Impostor | Funciona en múltiples dispositivos</p>
+            <p>Juego de Palabras con Impostor | Los códigos válidos están en el archivo codes.txt</p>
         </div>
     </div>
 
     <script>
-        // Configuración de Firebase (tu configuración)
+        // Tu configuración de Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyAnYLROrYxERL82DeT0ZDLrlxT11xb09AU",
             authDomain: "impostor-game-addfe.firebaseapp.com",
@@ -402,37 +403,64 @@
         let playerRef = null;
         let gameRef = null;
         
-        // Cargar códigos y palabras desde el archivo TXT
+        // Cargar códigos SOLO desde el archivo TXT - SIN códigos de ejemplo
         async function loadCodeWords() {
             try {
-                const response = await fetch('codes.txt');
-                const data = await response.text();
-                codeWords = {};
+                console.log("Cargando códigos únicamente desde codes.txt...");
                 
+                // Intentar cargar desde diferentes ubicaciones posibles
+                let response;
+                
+                try {
+                    response = await fetch('codes.txt');
+                    if (!response.ok) throw new Error('Primera ruta falló');
+                } catch (e1) {
+                    try {
+                        response = await fetch('./codes.txt');
+                        if (!response.ok) throw new Error('Segunda ruta falló');
+                    } catch (e2) {
+                        try {
+                            response = await fetch('/codes.txt');
+                            if (!response.ok) throw new Error('Tercera ruta falló');
+                        } catch (e3) {
+                            throw new Error('No se pudo cargar codes.txt desde ninguna ruta');
+                        }
+                    }
+                }
+                
+                const data = await response.text();
+                console.log("Archivo codes.txt cargado exitosamente");
+                
+                codeWords = {};
                 const lines = data.split('\n');
+                let loadedCount = 0;
+                
                 lines.forEach(line => {
                     if (line.trim()) {
                         const [code, word] = line.split(',');
                         if (code && word) {
-                            codeWords[code.trim().toUpperCase()] = word.trim();
+                            const cleanCode = code.trim().toUpperCase();
+                            const cleanWord = word.trim();
+                            codeWords[cleanCode] = cleanWord;
+                            loadedCount++;
+                            console.log(`Código cargado: ${cleanCode} -> ${cleanWord}`);
                         }
                     }
                 });
                 
-                console.log('Códigos cargados:', Object.keys(codeWords).length);
+                if (loadedCount === 0) {
+                    throw new Error('El archivo codes.txt está vacío o no tiene el formato correcto');
+                }
+                
+                console.log(`Total de códigos cargados: ${loadedCount}`);
                 return true;
+                
             } catch (error) {
-                console.error('Error al cargar códigos:', error);
-                // Códigos de ejemplo si no se puede cargar el archivo
-                codeWords = {
-                    'ABC123': 'MANZANA',
-                    'DEF456': 'ELEFANTE',
-                    'GHI789': 'COMPUTADORA',
-                    'JKL012': 'OCÉANO',
-                    'MNO345': 'MONTANA',
-                    'PQR678': 'TELEFONO'
-                };
-                return true;
+                console.error('Error crítico al cargar códigos:', error);
+                // NO USAR CÓDIGOS DE EJEMPLO - Dejamos el objeto vacío
+                codeWords = {};
+                showMessage('error', '❌ No se pudo cargar el archivo codes.txt. Verifica que el archivo exista.');
+                return false;
             }
         }
         
@@ -462,13 +490,17 @@
             
             // Cargar códigos si no están cargados
             if (Object.keys(codeWords).length === 0) {
-                await loadCodeWords();
+                const loaded = await loadCodeWords();
+                if (!loaded) {
+                    document.getElementById('loadingState').classList.add('hidden');
+                    return;
+                }
             }
             
-            // Validar si el código existe - ¡CORRECCIÓN IMPORTANTE!
+            // Validar si el código existe - IMPORTANTE: Solo códigos de codes.txt
             if (!codeWords[gameCodeInput]) {
                 document.getElementById('loadingState').classList.add('hidden');
-                showMessage('error', '❌ Código incorrecto. El código no existe en la lista.');
+                showMessage('error', `❌ Código incorrecto. "${gameCodeInput}" no es un código válido.<br>Los códigos válidos están en el archivo codes.txt.`);
                 return;
             }
             
@@ -506,7 +538,7 @@
                 hostId: playerId,
                 status: 'waiting',
                 participants: {},
-                impostor: null,
+                impostor: null, // Se guarda el ID del impostor, pero no se revela públicamente
                 word: codeWords[currentGameCode],
                 createdAt: firebase.database.ServerValue.TIMESTAMP
             });
@@ -558,7 +590,7 @@
             // Agregar participante al juego
             await database.ref('games/' + currentGameId + '/participants/' + playerId).set({
                 name: playerName,
-                isImpostor: false,
+                isImpostor: false, // Inicialmente no es impostor
                 joinedAt: firebase.database.ServerValue.TIMESTAMP
             });
             
@@ -570,7 +602,7 @@
             document.getElementById('gameState').classList.remove('hidden');
         }
         
-        // Actualizar estado del juego
+        // Actualizar estado del juego - CORREGIDO: Solo el impostor sabe que es impostor
         function updateGameState(snapshot) {
             const gameData = snapshot.val();
             
@@ -595,17 +627,16 @@
             }
             document.getElementById('roundStatus').textContent = `Estado: ${statusText}`;
             
-            // Actualizar lista de participantes
+            // Actualizar lista de participantes - IMPORTANTE: NO mostrar quién es el impostor
             const participantsList = document.getElementById('participantsList');
             participantsList.innerHTML = '';
             
             Object.entries(participants).forEach(([id, participant]) => {
                 const li = document.createElement('li');
                 
+                // Marcar al jugador actual
                 if (id === playerId) {
                     li.classList.add('me');
-                } else if (gameData.status === 'in_progress' && participant.isImpostor) {
-                    li.classList.add('impostor');
                 } else {
                     li.classList.add('regular');
                 }
@@ -614,12 +645,12 @@
                 nameSpan.textContent = participant.name;
                 
                 const roleSpan = document.createElement('span');
-                if (gameData.status === 'in_progress' && participant.isImpostor) {
-                    roleSpan.textContent = '👑 IMPOSTOR';
-                    roleSpan.style.color = '#ff4757';
-                    roleSpan.style.fontWeight = 'bold';
-                } else if (id === gameData.hostId) {
+                
+                // IMPORTANTE CAMBIO: Solo mostrar roles normales
+                // No revelar quién es el impostor a los demás jugadores
+                if (id === gameData.hostId) {
                     roleSpan.textContent = 'ANFITRIÓN';
+                    roleSpan.style.color = '#feb47b';
                 } else {
                     roleSpan.textContent = 'JUGADOR';
                 }
@@ -645,7 +676,7 @@
                 gameContent.classList.remove('hidden');
                 document.getElementById('gameWord').textContent = gameData.word;
                 
-                // Verificar si este jugador es el impostor
+                // Verificar si este jugador es el impostor - SOLO EL IMPOSTOR LO SABE
                 const currentPlayer = participants[playerId];
                 const isImpostor = currentPlayer && currentPlayer.isImpostor;
                 
@@ -653,9 +684,12 @@
                 const playerMessage = document.getElementById('playerMessage');
                 
                 if (isImpostor) {
+                    // Solo el impostor ve este mensaje
                     impostorMessage.classList.remove('hidden');
                     playerMessage.classList.add('hidden');
+                    console.log(`¡Eres el impostor! Palabra real: ${gameData.word}`);
                 } else {
+                    // Jugadores normales ven la palabra normal
                     impostorMessage.classList.add('hidden');
                     playerMessage.classList.remove('hidden');
                 }
@@ -692,19 +726,19 @@
             const participantIds = Object.keys(participants);
             const impostorId = participantIds[Math.floor(Math.random() * participantIds.length)];
             
-            // Actualizar estado del juego
+            // Actualizar estado del juego (no revelamos públicamente quién es el impostor)
             await database.ref('games/' + currentGameId).update({
                 status: 'in_progress',
-                impostor: impostorId,
+                impostor: impostorId, // Guardamos pero no revelamos
                 startedAt: firebase.database.ServerValue.TIMESTAMP
             });
             
-            // Marcar al impostor
+            // Marcar al impostor en su registro PRIVADO
             await database.ref('games/' + currentGameId + '/participants/' + impostorId).update({
                 isImpostor: true
             });
             
-            showMessage('success', '¡Juego iniciado! Un jugador ha sido designado como impostor.');
+            showMessage('success', '¡Juego iniciado! Un jugador ha sido designado como impostor (solo él lo sabe).');
         }
         
         // Reiniciar el juego
@@ -720,7 +754,7 @@
                 impostor: null
             });
             
-            // Reiniciar participantes
+            // Reiniciar participantes (marcar a todos como no impostores)
             const gameSnapshot = await database.ref('games/' + currentGameId + '/participants').once('value');
             const participants = gameSnapshot.val();
             
@@ -743,7 +777,7 @@
             // Crear elemento de mensaje
             const messageDiv = document.createElement('div');
             messageDiv.className = type === 'error' ? 'error-message' : 'success-message';
-            messageDiv.textContent = text;
+            messageDiv.innerHTML = text; // Usamos innerHTML para permitir <br>
             
             // Limpiar mensajes anteriores
             messageArea.innerHTML = '';
@@ -766,13 +800,18 @@
         
         // Inicializar la página
         document.addEventListener('DOMContentLoaded', async function() {
-            // Pre-cargar códigos
-            await loadCodeWords();
+            console.log("Inicializando juego...");
             
             // Generar ID de jugador
             playerId = generatePlayerId();
             
-            console.log('Juego listo. Códigos cargados:', Object.keys(codeWords).length);
+            // Pre-cargar códigos
+            console.log("Cargando códigos únicamente desde codes.txt...");
+            await loadCodeWords();
+            
+            if (Object.keys(codeWords).length > 0) {
+                console.log(`Códigos disponibles (${Object.keys(codeWords).length}):`, Object.keys(codeWords).join(', '));
+            }
         });
         
         // Limpiar al salir
