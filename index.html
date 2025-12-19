@@ -161,6 +161,11 @@
             border-left: 5px solid #28a745;
         }
         
+        .participants-list li.me {
+            background-color: rgba(0, 123, 255, 0.2);
+            border-left: 5px solid #007bff;
+        }
+        
         .game-status {
             text-align: center;
             padding: 20px;
@@ -212,17 +217,6 @@
         
         .instructions li {
             margin-bottom: 10px;
-        }
-        
-        .code-display {
-            font-size: 1.5rem;
-            text-align: center;
-            padding: 15px;
-            background-color: rgba(0, 0, 0, 0.3);
-            border-radius: 10px;
-            margin: 15px 0;
-            font-weight: bold;
-            letter-spacing: 3px;
         }
         
         .footer {
@@ -383,19 +377,20 @@
     </div>
 
     <script>
-        // Configuración de Firebase (usa tu propia configuración)
+        // Configuración de Firebase (tu configuración)
         const firebaseConfig = {
-    apiKey: "AIzaSyAnYLROrYxERL82DeT0ZDLrlxT11xb09AU",
-    authDomain: "impostor-game-addfe.firebaseapp.com",
-    databaseURL: "https://impostor-game-addfe-default-rtdb.firebaseio.com",
-    projectId: "impostor-game-addfe",
-    storageBucket: "impostor-game-addfe.firebasestorage.app",
-    messagingSenderId: "142466170646",
-    appId: "1:142466170646:web:fc335b6e5d6045d6a05a37"
-  };
-
+            apiKey: "AIzaSyAnYLROrYxERL82DeT0ZDLrlxT11xb09AU",
+            authDomain: "impostor-game-addfe.firebaseapp.com",
+            databaseURL: "https://impostor-game-addfe-default-rtdb.firebaseio.com",
+            projectId: "impostor-game-addfe",
+            storageBucket: "impostor-game-addfe.firebasestorage.app",
+            messagingSenderId: "142466170646",
+            appId: "1:142466170646:web:fc335b6e5d6045d6a05a37"
+        };
         
-        const app = initializeApp(firebaseConfig);
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
         
         // Variables globales
         let playerId = null;
@@ -470,10 +465,10 @@
                 await loadCodeWords();
             }
             
-            // Validar si el código existe
+            // Validar si el código existe - ¡CORRECCIÓN IMPORTANTE!
             if (!codeWords[gameCodeInput]) {
                 document.getElementById('loadingState').classList.add('hidden');
-                showMessage('error', '❌ Código no válido. El código no existe en la lista.');
+                showMessage('error', '❌ Código incorrecto. El código no existe en la lista.');
                 return;
             }
             
