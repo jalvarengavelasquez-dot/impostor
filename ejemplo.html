@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego de Palabras con Impostor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #2a3c7f, #4a5fcc);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, #ff7e5f, #feb47b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+        
+        .game-area {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .panel {
+            flex: 1;
+            min-width: 300px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .panel h2 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: #feb47b;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: 10px;
+        }
+        
+        .input-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        input {
+            width: 100%;
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            background-color: rgba(0, 0, 0, 0.2);
+            color: white;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #feb47b;
+            box-shadow: 0 0 10px rgba(254, 180, 123, 0.5);
+        }
+        
+        select {
+            width: 100%;
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            background-color: rgba(0, 0, 0, 0.2);
+            color: white;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+        }
+        
+        select:focus {
+            outline: none;
+            border-color: #feb47b;
+            box-shadow: 0 0 10px rgba(254, 180, 123, 0.5);
+        }
+        
+        button {
+            background: linear-gradient(to right, #ff7e5f, #feb47b);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            margin-top: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            background: linear-gradient(to right, #6c757d, #8a939b);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .participants-list {
+            list-style-type: none;
+            margin-top: 20px;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+        
+        .participants-list li {
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .participants-list li.me {
+            background-color: rgba(0, 123, 255, 0.2);
+            border-left: 5px solid #007bff;
+        }
+        
+        .participants-list li.regular {
+            background-color: rgba(40, 167, 69, 0.2);
+            border-left: 5px solid #28a745;
+        }
+        
+        .game-status {
+            text-align: center;
+            padding: 20px;
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+        }
+        
+        .game-word {
+            text-align: center;
+            font-size: 2.5rem;
+            margin: 30px 0;
+            padding: 25px;
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            letter-spacing: 3px;
+            font-weight: bold;
+            color: #feb47b;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+        
+        .impostor-message {
+            text-align: center;
+            font-size: 2rem;
+            color: #ff4757;
+            margin: 20px 0;
+            padding: 20px;
+            background-color: rgba(220, 53, 69, 0.1);
+            border-radius: 10px;
+            border: 2px dashed #ff4757;
+        }
+        
+        .instructions {
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+        
+        .instructions h3 {
+            color: #feb47b;
+            margin-bottom: 15px;
+        }
+        
+        .instructions ul {
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 10px;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .error-message {
+            color: #ff4757;
+            background-color: rgba(220, 53, 69, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border: 1px solid #ff4757;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .success-message {
+            color: #28a745;
+            background-color: rgba(40, 167, 69, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border: 1px solid #28a745;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 5px solid #feb47b;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        .code-display-box {
+            text-align: center;
+            padding: 20px;
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 2px solid #feb47b;
+        }
+        
+        .generated-code {
+            font-size: 2.5rem;
+            font-weight: bold;
+            letter-spacing: 5px;
+            color: #feb47b;
+            margin: 10px 0;
+        }
+        
+        .copy-button {
+            background: linear-gradient(to right, #2193b0, #6dd5ed);
+            max-width: 200px;
+            margin: 10px auto;
+        }
+        
+        .copy-button.copied {
+            background: linear-gradient(to right, #28a745, #20c997);
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .game-area {
+                flex-direction: column;
+            }
+            
+            .panel {
+                min-width: 100%;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Juego de Palabras con Impostor</h1>
+            <p class="subtitle">Elige un modo de juego para comenzar</p>
+        </header>
+        
+        <div class="game-area">
+            <div class="panel">
+                <h2>Configurar Juego</h2>
+                <div class="input-group">
+                    <label for="playerName">Tu Nombre:</label>
+                    <input type="text" id="playerName" placeholder="Ingresa tu nombre" maxlength="20">
+                </div>
+                
+                <div class="input-group">
+                    <label for="gameMode">Modo de Juego:</label>
+                    <select id="gameMode" onchange="toggleGameMode()">
+                        <option value="join">Unirse a juego existente</option>
+                        <option value="create">Crear nuevo juego</option>
+                    </select>
+                </div>
+                
+                <!-- Sección para unirse a juego existente -->
+                <div id="joinSection">
+                    <div class="input-group">
+                        <label for="gameCode">Código del Juego:</label>
+                        <input type="text" id="gameCode" placeholder="Ingresa el código del juego" maxlength="6">
+                    </div>
+                </div>
+                
+                <!-- Sección para crear nuevo juego -->
+                <div id="createSection" class="hidden">
+                    <div class="input-group">
+                        <label>Selecciona un código aleatorio:</label>
+                        <button type="button" onclick="generateRandomCodeForGame()">🎲 Generar Código Aleatorio</button>
+                    </div>
+                    
+                    <div id="generatedCodeContainer" class="hidden">
+                        <div class="code-display-box">
+                            <p>Tu código de juego es:</p>
+                            <div class="generated-code" id="generatedCode">ABC123</div>
+                            <p>Comparte este código con los demás jugadores</p>
+                            <button class="copy-button" onclick="copyGeneratedCode()">📋 Copiar Código</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <button id="joinButton" onclick="validateAndJoin()">Ingresar al Juego</button>
+                
+                <div id="messageArea">
+                    <!-- Mensajes de error/éxito aparecerán aquí -->
+                </div>
+                
+                <div class="loading hidden" id="loadingState">
+                    <div class="spinner"></div>
+                    <p>Procesando...</p>
+                </div>
+                
+                <div class="instructions">
+                    <h3>Instrucciones:</h3>
+                    <ul>
+                        <li><strong>Unirse a juego:</strong> Ingresa el código que te compartieron</li>
+                        <li><strong>Crear juego:</strong> Genera un código aleatorio y compártelo</li>
+                        <li>Se requieren mínimo 3 jugadores para comenzar</li>
+                        <li>Máximo 10 jugadores por partida</li>
+                        <li>Un jugador será aleatoriamente seleccionado como impostor</li>
+                        <li><strong>IMPORTANTE:</strong> Solo el impostor sabrá que es el impostor</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <h2>Estado del Juego</h2>
+                <div id="gameInfo">
+                    <div id="gameState" class="hidden">
+                        <p id="participantCount">Participantes: 0/10</p>
+                        <p id="roundStatus">Estado: Esperando participantes...</p>
+                        
+                        <h3>Participantes en la sala:</h3>
+                        <ul class="participants-list" id="participantsList">
+                            <!-- Los participantes se mostrarán aquí -->
+                        </ul>
+                        
+                        <button id="startButton" class="hidden" onclick="startGame()">Iniciar Juego</button>
+                        <button id="restartButton" class="hidden" onclick="restartGame()">Finalizar Juego</button>
+                    </div>
+                    
+                    <div id="gameContent" class="hidden">
+                        <div class="game-word" id="gameWord">
+                            PALABRA_SECRETA
+                        </div>
+                        
+                        <div id="impostorMessage" class="hidden">
+                            <div class="impostor-message">
+                                ¡ERES EL IMPOSTOR!
+                            </div>
+                            <p style="text-align: center; margin-top: 20px;">
+                                Los demás jugadores ven la palabra de arriba.<br>
+                                Tu objetivo es no ser descubierto mientras intentas adivinar la palabra real.
+                            </p>
+                        </div>
+                        
+                        <div id="playerMessage">
+                            <p style="text-align: center; font-size: 1.2rem;">
+                                Esta es la palabra secreta. Uno de los jugadores es el impostor y está viendo un mensaje diferente.<br>
+                                ¡Descubre quién es el impostor!
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Juego de Palabras con Impostor | Los códigos válidos están en el archivo codes.txt</p>
+        </div>
+    </div>
+
+    <script>
+        // Tu configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAnYLROrYxERL82DeT0ZDLrlxT11xb09AU",
+            authDomain: "impostor-game-addfe.firebaseapp.com",
+            databaseURL: "https://impostor-game-addfe-default-rtdb.firebaseio.com",
+            projectId: "impostor-game-addfe",
+            storageBucket: "impostor-game-addfe.firebasestorage.app",
+            messagingSenderId: "142466170646",
+            appId: "1:142466170646:web:fc335b6e5d6045d6a05a37"
+        };
+        
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        
+        // Variables globales
+        let playerId = null;
+        let currentGameCode = null;
+        let currentGameId = null;
+        let playerName = "";
+        let isHost = false;
+        let codeWords = {};
+        let playerRef = null;
+        let gameRef = null;
+        let generatedCode = null;
+        
+        // Cargar códigos SOLO desde el archivo TXT - SIN códigos de ejemplo
+        async function loadCodeWords() {
+            try {
+                console.log("Cargando códigos únicamente desde codes.txt...");
+                
+                // Intentar cargar desde diferentes ubicaciones posibles
+                let response;
+                
+                try {
+                    response = await fetch('codes.txt');
+                    if (!response.ok) throw new Error('Primera ruta falló');
+                } catch (e1) {
+                    try {
+                        response = await fetch('./codes.txt');
+                        if (!response.ok) throw new Error('Segunda ruta falló');
+                    } catch (e2) {
+                        try {
+                            response = await fetch('/codes.txt');
+                            if (!response.ok) throw new Error('Tercera ruta falló');
+                        } catch (e3) {
+                            throw new Error('No se pudo cargar codes.txt desde ninguna ruta');
+                        }
+                    }
+                }
+                
+                const data = await response.text();
+                console.log("Archivo codes.txt cargado exitosamente");
+                
+                codeWords = {};
+                const lines = data.split('\n');
+                let loadedCount = 0;
+                
+                lines.forEach(line => {
+                    if (line.trim()) {
+                        const [code, word] = line.split(',');
+                        if (code && word) {
+                            const cleanCode = code.trim().toUpperCase();
+                            const cleanWord = word.trim();
+                            codeWords[cleanCode] = cleanWord;
+                            loadedCount++;
+                            console.log(`Código cargado: ${cleanCode} -> ${cleanWord}`);
+                        }
+                    }
+                });
+                
+                if (loadedCount === 0) {
+                    throw new Error('El archivo codes.txt está vacío o no tiene el formato correcto');
+                }
+                
+                console.log(`Total de códigos cargados: ${loadedCount}`);
+                return true;
+                
+            } catch (error) {
+                console.error('Error crítico al cargar códigos:', error);
+                // NO USAR CÓDIGOS DE EJEMPLO - Dejamos el objeto vacío
+                codeWords = {};
+                showMessage('error', '❌ No se pudo cargar el archivo codes.txt. Verifica que el archivo exista.');
+                return false;
+            }
+        }
+        
+        // Generar ID único para el jugador
+        function generatePlayerId() {
+            return 'player_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+        }
+        
+        // Alternar entre modos de juego
+        function toggleGameMode() {
+            const gameMode = document.getElementById('gameMode').value;
+            const joinSection = document.getElementById('joinSection');
+            const createSection = document.getElementById('createSection');
+            
+            if (gameMode === 'join') {
+                joinSection.classList.remove('hidden');
+                createSection.classList.add('hidden');
+            } else {
+                joinSection.classList.add('hidden');
+                createSection.classList.remove('hidden');
+            }
+        }
+        
+        // Generar código aleatorio para crear juego
+        function generateRandomCodeForGame() {
+            if (Object.keys(codeWords).length === 0) {
+                showMessage('error', 'Primero carga los códigos. Intenta de nuevo.');
+                return;
+            }
+            
+            // Obtener todos los códigos disponibles
+            const availableCodes = Object.keys(codeWords);
+            
+            // Seleccionar un código aleatorio
+            const randomIndex = Math.floor(Math.random() * availableCodes.length);
+            generatedCode = availableCodes[randomIndex];
+            
+            // Mostrar el código generado
+            document.getElementById('generatedCode').textContent = generatedCode;
+            document.getElementById('generatedCodeContainer').classList.remove('hidden');
+            
+            // Actualizar el botón de unirse
+            document.getElementById('joinButton').textContent = 'Crear y Unirse al Juego';
+            
+            showMessage('success', `✅ Código generado: ${generatedCode} - ${codeWords[generatedCode]}`);
+        }
+        
+        // Copiar el código generado al portapapeles
+        function copyGeneratedCode() {
+            if (!generatedCode) return;
+            
+            navigator.clipboard.writeText(generatedCode)
+                .then(() => {
+                    const copyBtn = document.querySelector('.copy-button');
+                    copyBtn.textContent = '✅ ¡Copiado!';
+                    copyBtn.classList.add('copied');
+                    
+                    setTimeout(() => {
+                        copyBtn.textContent = '📋 Copiar Código';
+                        copyBtn.classList.remove('copied');
+                    }, 2000);
+                    
+                    console.log(`Código copiado: ${generatedCode}`);
+                })
+                .catch(err => {
+                    // Fallback para navegadores antiguos
+                    const textArea = document.createElement('textarea');
+                    textArea.value = generatedCode;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    
+                    const copyBtn = document.querySelector('.copy-button');
+                    copyBtn.textContent = '✅ ¡Copiado!';
+                    copyBtn.classList.add('copied');
+                    
+                    setTimeout(() => {
+                        copyBtn.textContent = '📋 Copiar Código';
+                        copyBtn.classList.remove('copied');
+                    }, 2000);
+                });
+        }
+        
+        // Validar y unirse al juego
+        async function validateAndJoin() {
+            const playerNameInput = document.getElementById('playerName').value.trim();
+            const gameMode = document.getElementById('gameMode').value;
+            
+            // Validar nombre
+            if (!playerNameInput) {
+                showMessage('error', 'Por favor ingresa tu nombre');
+                return;
+            }
+            
+            playerName = playerNameInput;
+            
+            // Mostrar estado de carga
+            document.getElementById('loadingState').classList.remove('hidden');
+            
+            // Cargar códigos si no están cargados
+            if (Object.keys(codeWords).length === 0) {
+                const loaded = await loadCodeWords();
+                if (!loaded) {
+                    document.getElementById('loadingState').classList.add('hidden');
+                    return;
+                }
+            }
+            
+            // Determinar el código según el modo
+            if (gameMode === 'join') {
+                // Modo: Unirse a juego existente
+                const gameCodeInput = document.getElementById('gameCode').value.trim().toUpperCase();
+                
+                if (!gameCodeInput) {
+                    document.getElementById('loadingState').classList.add('hidden');
+                    showMessage('error', 'Por favor ingresa un código para unirte');
+                    return;
+                }
+                
+                // Validar si el código existe
+                if (!codeWords[gameCodeInput]) {
+                    document.getElementById('loadingState').classList.add('hidden');
+                    showMessage('error', `❌ Código incorrecto. "${gameCodeInput}" no es un código válido.<br>Los códigos válidos están en el archivo codes.txt.`);
+                    return;
+                }
+                
+                currentGameCode = gameCodeInput;
+                
+            } else {
+                // Modo: Crear nuevo juego
+                if (!generatedCode) {
+                    document.getElementById('loadingState').classList.add('hidden');
+                    showMessage('error', 'Primero genera un código aleatorio');
+                    return;
+                }
+                
+                currentGameCode = generatedCode;
+                isHost = true; // El creador del juego es el host
+            }
+            
+            // Generar ID único si es la primera vez
+            if (!playerId) {
+                playerId = generatePlayerId();
+            }
+            
+            // Determinar si el juego ya existe (para modo crear o unirse)
+            const gameSnapshot = await database.ref('games/' + currentGameCode).once('value');
+            const gameData = gameSnapshot.val();
+            
+            if (!gameData) {
+                // Juego no existe - crear nuevo (modo crear o primer jugador en unirse)
+                await createGame();
+            } else {
+                // Juego existe - unirse
+                isHost = false; // Si el juego ya existe, no somos host (a menos que seamos el creador)
+                await joinExistingGame(gameData);
+            }
+        }
+        
+        // Crear nuevo juego
+        async function createGame() {
+            currentGameId = currentGameCode;
+            
+            // Crear juego en Firebase
+            await database.ref('games/' + currentGameId).set({
+                code: currentGameCode,
+                hostId: playerId,
+                status: 'waiting',
+                participants: {},
+                impostor: null,
+                word: codeWords[currentGameCode],
+                createdAt: firebase.database.ServerValue.TIMESTAMP
+            });
+            
+            // Unirse como participante
+            await joinAsParticipant();
+            
+            document.getElementById('loadingState').classList.add('hidden');
+            showMessage('success', '✅ Juego creado. Esperando más jugadores...');
+        }
+        
+        // Unirse a juego existente
+        async function joinExistingGame(gameData) {
+            currentGameId = currentGameCode;
+            
+            // Verificar estado del juego
+            if (gameData.status === 'in_progress') {
+                document.getElementById('loadingState').classList.add('hidden');
+                showMessage('error', 'Este juego ya está en progreso');
+                return;
+            }
+            
+            // Verificar número de participantes
+            const participantsCount = Object.keys(gameData.participants || {}).length;
+            if (participantsCount >= 10) {
+                document.getElementById('loadingState').classList.add('hidden');
+                showMessage('error', 'Este juego ya tiene 10 participantes (máximo)');
+                return;
+            }
+            
+            // Si el creador se une a su propio juego, sigue siendo host
+            if (gameData.hostId === playerId) {
+                isHost = true;
+            }
+            
+            // Unirse como participante
+            await joinAsParticipant();
+            
+            document.getElementById('loadingState').classList.add('hidden');
+            showMessage('success', '✅ Te has unido al juego');
+        }
+        
+        // Unirse como participante
+        async function joinAsParticipant() {
+            // Remover listener anterior si existe
+            if (playerRef) {
+                playerRef.off();
+            }
+            
+            if (gameRef) {
+                gameRef.off();
+            }
+            
+            // Agregar participante al juego
+            await database.ref('games/' + currentGameId + '/participants/' + playerId).set({
+                name: playerName,
+                isImpostor: false,
+                joinedAt: firebase.database.ServerValue.TIMESTAMP
+            });
+            
+            // Escuchar cambios en el juego
+            gameRef = database.ref('games/' + currentGameId);
+            gameRef.on('value', updateGameState);
+            
+            // Mostrar estado del juego
+            document.getElementById('gameState').classList.remove('hidden');
+        }
+        
+        // Actualizar estado del juego - CORREGIDO: Solo el impostor sabe que es impostor
+        function updateGameState(snapshot) {
+            const gameData = snapshot.val();
+            
+            if (!gameData) {
+                document.getElementById('gameState').classList.add('hidden');
+                showMessage('error', 'Este juego ya no existe');
+                return;
+            }
+            
+            const participants = gameData.participants || {};
+            const participantsCount = Object.keys(participants).length;
+            
+            // Actualizar contador de participantes
+            document.getElementById('participantCount').textContent = `Participantes: ${participantsCount}/10`;
+            
+            // Actualizar estado
+            let statusText = 'Esperando participantes...';
+            if (gameData.status === 'in_progress') {
+                statusText = 'Juego en progreso';
+            } else if (participantsCount >= 3) {
+                statusText = 'Listo para comenzar';
+            }
+            document.getElementById('roundStatus').textContent = `Estado: ${statusText}`;
+            
+            // Actualizar lista de participantes - IMPORTANTE: NO mostrar quién es el impostor
+            const participantsList = document.getElementById('participantsList');
+            participantsList.innerHTML = '';
+            
+            Object.entries(participants).forEach(([id, participant]) => {
+                const li = document.createElement('li');
+                
+                // Marcar al jugador actual
+                if (id === playerId) {
+                    li.classList.add('me');
+                } else {
+                    li.classList.add('regular');
+                }
+                
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = participant.name;
+                
+                const roleSpan = document.createElement('span');
+                
+                // IMPORTANTE CAMBIO: Solo mostrar roles normales
+                // No revelar quién es el impostor a los demás jugadores
+                if (id === gameData.hostId) {
+                    roleSpan.textContent = 'ANFITRIÓN';
+                    roleSpan.style.color = '#feb47b';
+                } else {
+                    roleSpan.textContent = 'JUGADOR';
+                }
+                
+                li.appendChild(nameSpan);
+                li.appendChild(roleSpan);
+                participantsList.appendChild(li);
+            });
+            
+            // Mostrar/ocultar botón de iniciar
+            const startButton = document.getElementById('startButton');
+            const restartButton = document.getElementById('restartButton');
+            const gameContent = document.getElementById('gameContent');
+            
+            if (isHost && participantsCount >= 3 && gameData.status === 'waiting') {
+                startButton.classList.remove('hidden');
+            } else {
+                startButton.classList.add('hidden');
+            }
+            
+            if (gameData.status === 'in_progress') {
+                // Mostrar contenido del juego
+                gameContent.classList.remove('hidden');
+                document.getElementById('gameWord').textContent = gameData.word;
+                
+                // Verificar si este jugador es el impostor - SOLO EL IMPOSTOR LO SABE
+                const currentPlayer = participants[playerId];
+                const isImpostor = currentPlayer && currentPlayer.isImpostor;
+                
+                const impostorMessage = document.getElementById('impostorMessage');
+                const playerMessage = document.getElementById('playerMessage');
+                
+                if (isImpostor) {
+                    // Solo el impostor ve este mensaje
+                    impostorMessage.classList.remove('hidden');
+                    playerMessage.classList.add('hidden');
+                    console.log(`¡Eres el impostor! Palabra real: ${gameData.word}`);
+                } else {
+                    // Jugadores normales ven la palabra normal
+                    impostorMessage.classList.add('hidden');
+                    playerMessage.classList.remove('hidden');
+                }
+                
+                // Mostrar botón de reiniciar solo al anfitrión
+                if (isHost) {
+                    restartButton.classList.remove('hidden');
+                } else {
+                    restartButton.classList.add('hidden');
+                }
+            } else {
+                gameContent.classList.add('hidden');
+                restartButton.classList.add('hidden');
+            }
+        }
+        
+        // Iniciar el juego
+        async function startGame() {
+            if (!isHost) {
+                showMessage('error', 'Solo el anfitrión puede iniciar el juego');
+                return;
+            }
+            
+            // Obtener participantes
+            const gameSnapshot = await database.ref('games/' + currentGameId + '/participants').once('value');
+            const participants = gameSnapshot.val();
+            
+            if (!participants || Object.keys(participants).length < 3) {
+                showMessage('error', 'Se necesitan al menos 3 participantes para iniciar el juego');
+                return;
+            }
+            
+            // Seleccionar aleatoriamente un impostor
+            const participantIds = Object.keys(participants);
+            const impostorId = participantIds[Math.floor(Math.random() * participantIds.length)];
+            
+            // Actualizar estado del juego (no revelamos públicamente quién es el impostor)
+            await database.ref('games/' + currentGameId).update({
+                status: 'in_progress',
+                impostor: impostorId, // Guardamos pero no revelamos
+                startedAt: firebase.database.ServerValue.TIMESTAMP
+            });
+            
+            // Marcar al impostor en su registro PRIVADO
+            await database.ref('games/' + currentGameId + '/participants/' + impostorId).update({
+                isImpostor: true
+            });
+            
+            showMessage('success', '¡Juego iniciado! Un jugador ha sido designado como impostor (solo él lo sabe).');
+        }
+        
+        // Reiniciar el juego
+        async function restartGame() {
+            if (!isHost) {
+                showMessage('error', 'Solo el anfitrión puede reiniciar el juego');
+                return;
+            }
+            
+            // Reiniciar estado del juego
+            await database.ref('games/' + currentGameId).update({
+                status: 'waiting',
+                impostor: null
+            });
+            
+            // Reiniciar participantes (marcar a todos como no impostores)
+            const gameSnapshot = await database.ref('games/' + currentGameId + '/participants').once('value');
+            const participants = gameSnapshot.val();
+            
+            if (participants) {
+                const updates = {};
+                Object.keys(participants).forEach(id => {
+                    updates['/participants/' + id + '/isImpostor'] = false;
+                });
+                
+                await database.ref('games/' + currentGameId).update(updates);
+            }
+            
+            showMessage('success', 'Juego reiniciado. Pueden comenzar una nueva ronda.');
+        }
+        
+        // Mostrar mensajes
+        function showMessage(type, text) {
+            const messageArea = document.getElementById('messageArea');
+            
+            // Crear elemento de mensaje
+            const messageDiv = document.createElement('div');
+            messageDiv.className = type === 'error' ? 'error-message' : 'success-message';
+            messageDiv.innerHTML = text; // Usamos innerHTML para permitir <br>
+            
+            // Limpiar mensajes anteriores
+            messageArea.innerHTML = '';
+            messageArea.appendChild(messageDiv);
+            
+            // Auto-eliminar mensajes de éxito después de 5 segundos
+            if (type === 'success') {
+                setTimeout(() => {
+                    messageDiv.remove();
+                }, 5000);
+            }
+        }
+        
+        // Permitir enviar con Enter
+        document.getElementById('gameCode').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                validateAndJoin();
+            }
+        });
+        
+        // Inicializar la página
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log("Inicializando juego...");
+            
+            // Generar ID de jugador
+            playerId = generatePlayerId();
+            
+            // Pre-cargar códigos
+            console.log("Cargando códigos únicamente desde codes.txt...");
+            await loadCodeWords();
+            
+            if (Object.keys(codeWords).length > 0) {
+                console.log(`Códigos disponibles (${Object.keys(codeWords).length}):`, Object.keys(codeWords).join(', '));
+            }
+        });
+        
+        // Limpiar al salir
+        window.addEventListener('beforeunload', async function() {
+            if (currentGameId && playerId) {
+                // Remover participante del juego
+                await database.ref('games/' + currentGameId + '/participants/' + playerId).remove();
+                
+                // Verificar si el juego quedó vacío
+                const gameSnapshot = await database.ref('games/' + currentGameId + '/participants').once('value');
+                if (!gameSnapshot.exists() || Object.keys(gameSnapshot.val()).length === 0) {
+                    // Eliminar juego si no hay participantes
+                    await database.ref('games/' + currentGameId).remove();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
