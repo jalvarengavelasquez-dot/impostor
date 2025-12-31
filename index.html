@@ -420,22 +420,23 @@
                     </div>
                     
                     <div id="gameContent" class="hidden">
-                        <div class="game-word" id="gameWord">
-                            PALABRA_SECRETA_OCULTA_PARA_EL_IMPOSTOR
-                        </div>
-                        
+                        <!-- Sección para el impostor (no ve la palabra) -->
                         <div id="impostorMessage" class="hidden">
                             <div class="impostor-message">
                                 ¡ERES EL IMPOSTOR!
                             </div>
-                            <p style="text-align: center; margin-top: 20px;">
-                                Los demás jugadores ven la palabra de arriba.<br>
+                            <p style="text-align: center; margin-top: 20px; font-size: 1.2rem;">
+                                Los demás jugadores están viendo una palabra secreta.<br>
                                 Tu objetivo es no ser descubierto mientras intentas adivinar la palabra real.
                             </p>
                         </div>
                         
-                        <div id="playerMessage">
-                            <p style="text-align: center; font-size: 1.2rem;">
+                        <!-- Sección para jugadores normales (ven la palabra) -->
+                        <div id="playerMessage" class="hidden">
+                            <div class="game-word" id="gameWord">
+                                PALABRA_SECRETA_OCULTA_PARA_EL_IMPOSTOR
+                            </div>
+                            <p style="text-align: center; font-size: 1.2rem; margin-top: 20px;">
                                 Esta es la palabra secreta. Uno de los jugadores es el impostor y está viendo un mensaje diferente.<br>
                                 ¡Descubre quién es el impostor!
                             </p>
@@ -774,7 +775,7 @@
             document.getElementById('gameState').classList.remove('hidden');
         }
         
-        // Actualizar estado del juego - CORREGIDO: Solo el impostor sabe que es impostor
+        // Actualizar estado del juego - MODIFICADO: El impostor no ve la palabra
         function updateGameState(snapshot) {
             const gameData = snapshot.val();
             
@@ -846,7 +847,6 @@
             if (gameData.status === 'in_progress') {
                 // Mostrar contenido del juego
                 gameContent.classList.remove('hidden');
-                document.getElementById('gameWord').textContent = gameData.word;
                 
                 // Verificar si este jugador es el impostor - SOLO EL IMPOSTOR LO SABE
                 const currentPlayer = participants[playerId];
@@ -854,16 +854,20 @@
                 
                 const impostorMessage = document.getElementById('impostorMessage');
                 const playerMessage = document.getElementById('playerMessage');
+                const gameWordElement = document.getElementById('gameWord');
+                
+                // Primero, ocultar ambos mensajes
+                impostorMessage.classList.add('hidden');
+                playerMessage.classList.add('hidden');
                 
                 if (isImpostor) {
-                    // Solo el impostor ve este mensaje
+                    // Solo el impostor ve este mensaje (no ve la palabra)
                     impostorMessage.classList.remove('hidden');
-                    playerMessage.classList.add('hidden');
                     console.log(`¡Eres el impostor! Palabra real: ${gameData.word}`);
                 } else {
                     // Jugadores normales ven la palabra normal
-                    impostorMessage.classList.add('hidden');
                     playerMessage.classList.remove('hidden');
+                    gameWordElement.textContent = gameData.word;
                 }
                 
                 // Mostrar botón de reiniciar solo al anfitrión
@@ -1003,5 +1007,3 @@
     </script>
 </body>
 </html>
-
-
